@@ -5,7 +5,7 @@ const path = require('path');
 const cors = require('cors');
 
 const app = express();
-const PORT = 8580;
+const PORT = 8581;
 const VOTES_FILE = path.join(__dirname, 'votes.json');
 
 // Middleware для парсинга JSON
@@ -16,11 +16,18 @@ app.use(cors());
 // GET-сервис для получения вариантов
 app.get('/variants', (req, res) => {
     fs.readFile(VOTES_FILE, 'utf8', (err, data) => {
+
         if (err) {
             return res.status(500).send("Ошибка чтения файла.");
         }
+
         const votes = JSON.parse(data);
-        res.json(votes.votes);
+        const variants = Object.entries(votes.votes).map(([key, value]) => ({
+            code: key,
+            text: value.text
+        }))
+
+        res.json(variants);
     });
 });
 
@@ -41,6 +48,7 @@ app.post('/stat', (req, res) => {
 
 // POST-сервис для принятия голоса
 app.post('/vote', (req, res) => {
+    console.log(req.body.code);
     const voteCode = req.body.code;
 
     fs.readFile(VOTES_FILE, 'utf8', (err, data) => {
@@ -70,5 +78,5 @@ app.get('/', (req, res) => {
 
 // Запуск сервера
 app.listen(PORT, () => {
-    console.log(`Сервер работает на http://localhost:${PORT}`);
+    console.log(`Сервер работает на порту${PORT}`);
 });
