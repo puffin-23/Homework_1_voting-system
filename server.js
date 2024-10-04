@@ -78,5 +78,5 @@ app.get('/', (req, res) => {
 
 // Запуск сервера
 app.listen(PORT, () => {
-    console.log(`Сервер работает на порту${PORT}`);
+    console.log(`Сервер работает на http://localhost:${PORT}`);
 });
