@@ -1,55 +1,72 @@
 const express = require('express');
-const cors = require('cors');
-const path = require('path');
+const bodyParser = require('body-parser');
 const fs = require('fs');
+const path = require('path');
 
 const app = express();
-app.use(cors());
-app.use(express.json());
+const PORT = 8580;
+const VOTES_FILE = path.join(__dirname, 'votes.json');
+
+// Middleware для парсинга JSON
+app.use(bodyParser.json());
 app.use(express.static('public'));
 
-let variants = [
-    { id: 1, text: "Вариант 1", votes: 0 },
-    { id: 2, text: "Вариант 2", votes: 0 },
-    { id: 3, text: "Вариант 3", votes: 0 },
-];
-
-let statFile = path.join(__dirname, 'public', 'stat.json');
-
+// GET-сервис для получения вариантов
 app.get('/variants', (req, res) => {
-    res.json(variants);
+    fs.readFile(VOTES_FILE, 'utf8', (err, data) => {
+        if (err) {
+            return res.status(500).send("Ошибка чтения файла.");
+        }
+        const votes = JSON.parse(data);
+        res.json(votes.votes);
+    });
 });
 
-app.post('/vote', (req, res) => {
-    const { variantId } = req.body;
-    const variant = variants.find(variant => variant.id === variantId);
-    if (variant) {
-        variant.votes += 1;
-        res.status(200).send('Vote counted');
-    } else {
-        res.status(400).send('Variant not found');
-    }
-
-    fs.writeFile(statFile, JSON.stringify(variants), (err) => {
+// POST-сервис для получения статистики
+app.post('/stat', (req, res) => {
+    fs.readFile(VOTES_FILE, 'utf8', (err, data) => {
         if (err) {
-            console.error('Error writing file:', err);
+            return res.status(500).send("Ошибка чтения файла.");
+        }
+        const votes = JSON.parse(data);
+        const statistics = Object.entries(votes.votes).map(([key, value]) => ({
+            code: key,
+            count: value.count
+        }));
+        res.json(statistics);
+    });
+});
+
+// POST-сервис для принятия голоса
+app.post('/vote', (req, res) => {
+    const voteCode = req.body.code;
+
+    fs.readFile(VOTES_FILE, 'utf8', (err, data) => {
+        if (err) {
+            return res.status(500).send("Ошибка чтения файла.");
+        }
+        const votes = JSON.parse(data);
+        
+        if (votes.votes[voteCode]) {
+            votes.votes[voteCode].count += 1; // Увеличиваем счетчик голосов
+            fs.writeFile(VOTES_FILE, JSON.stringify(votes, null, 2), (err) => {
+                if (err) {
+                    return res.status(500).send("Ошибка записи в файл.");
+                }
+                res.sendStatus(200);
+            });
         } else {
-            console.log('File written successfully');
+            res.status(400).send("Неверный код ответа.");
         }
     });
-
 });
 
-app.post('/stat', (req, res) => {
-    const stats = variants.map(variant => ({ id: variant.id, count: variant.votes }));
-    res.json(stats);
-});
-
+// Настройка запроса главной страницы
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-const PORT = process.env.PORT || 3000;
+// Запуск сервера
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`Сервер работает на http://localhost:${PORT}`);
 });
