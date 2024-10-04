@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
+const cors = require('cors');
 
 const app = express();
 const PORT = 8580;
@@ -10,6 +11,7 @@ const VOTES_FILE = path.join(__dirname, 'votes.json');
 // Middleware для парсинга JSON
 app.use(bodyParser.json());
 app.use(express.static('public'));
+app.use(cors());
 
 // GET-сервис для получения вариантов
 app.get('/variants', (req, res) => {
