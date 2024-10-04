@@ -48,21 +48,27 @@ app.post('/stat', (req, res) => {
 
 // POST-сервис для принятия голоса
 app.post('/vote', (req, res) => {
-    console.log(req.body.code);
-    const voteCode = req.body.code;
+
+    let code = req.body.code;
+
+    let voteCode = ++code;
 
     fs.readFile(VOTES_FILE, 'utf8', (err, data) => {
         if (err) {
             return res.status(500).send("Ошибка чтения файла.");
         }
         const votes = JSON.parse(data);
-        
+
         if (votes.votes[voteCode]) {
+
             votes.votes[voteCode].count += 1; // Увеличиваем счетчик голосов
+
             fs.writeFile(VOTES_FILE, JSON.stringify(votes, null, 2), (err) => {
+
                 if (err) {
                     return res.status(500).send("Ошибка записи в файл.");
                 }
+
                 res.sendStatus(200);
             });
         } else {
@@ -78,5 +84,5 @@ app.get('/', (req, res) => {
 
 // Запуск сервера
 app.listen(PORT, () => {
-    console.log(`Сервер работает на http://localhost:${PORT}`);
+    console.log(`Сервер работает на порту ${PORT}`);
 });
