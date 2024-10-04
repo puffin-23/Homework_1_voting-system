@@ -5,7 +5,7 @@ const path = require('path');
 const cors = require('cors');
 
 const app = express();
-const PORT = 8580;
+const PORT = 8581;
 const VOTES_FILE = path.join(__dirname, 'votes.json');
 
 // Middleware для парсинга JSON
@@ -70,5 +70,5 @@ app.get('/', (req, res) => {
 
 // Запуск сервера
 app.listen(PORT, () => {
-    console.log(`Сервер работает на http://localhost:${PORT}`);
+    console.log(`Сервер работает на порту ${PORT}`);
 });
