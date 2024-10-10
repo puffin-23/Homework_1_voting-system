@@ -42,7 +42,19 @@ app.post('/stat', (req, res) => {
             code: key,
             count: value.count
         }));
-        res.json(statistics);
+        const clientAccept = req.headers.accept
+        if ( clientAccept === 'application/json') {
+            res.setHeader('Content-Type', 'application/json');
+            res.json(statistics);
+        } 
+        else if ( clientAccept === 'application/xml') {
+            res.setHeader('Content-Type', 'application/xml');
+            res.send(statistics);
+        }
+        else {
+            res.setHeader('Content-Type', 'text/plain');
+            res.send(statistics);
+        }
     });
 });
 
