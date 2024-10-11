@@ -29,126 +29,130 @@
     <div id="variants"></div>
     <div class="stats" id="statistics"></div>
 
-</head>
-<body>
-    <h1>Статистика голосования</h1>
-    <button onclick="fetchStatJSON()">Получить статистику в формате JSON</button>
-    <button onclick="fetchStatXML()">Получить статистику в формате XML</button>
+    </head>
 
-    <script>
-        //Получение вариантов голосования
-        async function fetchVariants() {
-            const response = await fetch('/variants');
-            const data = await response.json();
-            return data;
-        }
+    <body>
+        <h1>Статистика голосования</h1>
+        <button onclick="fetchStatJSON()">Получить статистику в формате JSON</button>
+        <button onclick="fetchStatXML()">Получить статистику в формате XML</button>
 
-        //Получение статистики в формате JSON
-        async function fetchStatJSON() {
-            const fetchOptions = {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
+        <script>
+            //Получение вариантов голосования
+            async function fetchVariants() {
+                const response = await fetch('/variants', {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+                const data = await response.json();
+                return data;
+            }
+
+            //Получение статистики в формате JSON
+            async function fetchStatJSON() {
+                const fetchOptions = {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                    }
                 }
+                const response = await fetch('/stat', fetchOptions)
+                const data = await response.json()
+                console.log('JSON-статистика:', JSON.stringify(data, null, 2));
             }
-            const response = await fetch('/stat', fetchOptions)
-            const data = await response.json()
-            console.log('JSON-статистика:', JSON.stringify(data, null, 2));
-        }
-        
-        //Получение статистики голосования в формате XML
-        async function fetchStatXML() {
-            const fetchOptions = {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/xml',
+
+            //Получение статистики голосования в формате XML
+            async function fetchStatXML() {
+                const fetchOptions = {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/xml',
+                    }
                 }
-            }
-            const response = await fetch('/stat', fetchOptions)
-            let data = await response.text();
-            console.log(data);
-            let statXml = stringToXmlDocument(data);
-            console.log('XML-статистика:', statXml);
-        }
-
-        //Получение статистики на странице в виде HTML
-        async function fetchStatistics() {
-        const fetchOptions = {
-            method: 'POST',
-            headers: {
-                'Accept': 'text/html',
-            }
-        }
-        const response = await fetch('/stat', fetchOptions)
-        const data = await response.json();
-        return data;
-    }
-
-        async function castVote(code) {
-            await fetch('/vote', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code })
-            });
-        }
-
-        async function render() {
-            const variants = await fetchVariants();
-            const stats = await fetchStatistics();
-
-            const variantsDiv = document.getElementById('variants');
-            variantsDiv.innerHTML = '';
-
-            for (const [code, { text }] of Object.entries(variants)) {
-                const button = document.createElement('button');
-                button.className = 'button';
-                button.textContent = text;
-                button.onclick = async () => {
-                    await castVote(code);
-                    updateStats();
-                };
-                variantsDiv.appendChild(button);
+                const response = await fetch('/stat', fetchOptions)
+                let data = await response.text();
+                let statXml = xmlStringToDocument(data);
+                console.log('XML-статистика:', statXml);
             }
 
-            updateStats(stats);            
+            //Получение статистики на странице в виде HTML
+            async function fetchStatistics() {
+                const fetchOptions = {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'text/html',
+                    }
+                }
+                const response = await fetch('/stat', fetchOptions)
+                const data = await response.text();
+                const statHtml = JSON.parse(data);
+                return statHtml;
             }
 
-        async function updateStats() {
-            const stats = await fetchStatistics();
-            const statsDiv = document.getElementById('statistics');
-            statsDiv.innerHTML = '<h3>Статистика</h3>'
-            stats.forEach(item => {
-                statsDiv.innerHTML += `<p>Вариант ${item.code}: ${item.count} голосов</p>`
-            });
-        }
+            async function castVote(code) {
+                await fetch('/vote', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
+            }
 
-        render();
+            async function render() {
+                const variants = await fetchVariants();
+                const stats = await fetchStatistics();
+
+                const variantsDiv = document.getElementById('variants');
+                variantsDiv.innerHTML = '';
+
+                for (const [code, { text }] of Object.entries(variants)) {
+                    const button = document.createElement('button');
+                    button.className = 'button';
+                    button.textContent = text;
+                    button.onclick = async () => {
+                        await castVote(code);
+                        updateStats();
+                    };
+                    variantsDiv.appendChild(button);
+                }
+
+                updateStats();
+            }
+
+            async function updateStats() {
+                const stats = await fetchStatistics();
+                const statisticsDiv = document.getElementById('statistics');
+                statisticsDiv.innerHTML = statisticsToHTML(stats);
+
+            }
+
+            render();
+
+            function xmlStringToDocument(xmlString) {
+                // Создаем новый экземпляр DOMParser
+                const parser = new DOMParser();
+
+                // Парсим строку в XML-документ
+                const xmlDoc = parser.parseFromString(xmlString, "application/xml");
+
+                // Проверяем на наличие ошибок при парсинге
+                const parserError = xmlDoc.getElementsByTagName("parsererror");
+                if (parserError.length > 0) {
+                    throw new Error("Ошибка при разборе XML: " + parserError[0].textContent);
+                }
+
+                return xmlDoc;
+            }
 
 
-        function stringToXmlDocument(jsonString) {
-            let jsonArray = JSON.parse(jsonString);
+            function statisticsToHTML(statistics) {
+                let html = '<h3>Статистика</h3>';
+                statistics.forEach(stat => {
+                    html += `<p>Вариант ${stat.code}: ${stat.count} голосов</p>`;
+                });
+                return html;
+            }
 
-            const xmlDocument = document.implementation.createDocument(null, 'votes');
 
-            jsonArray.forEach(item => {
-                const variant = xmlDocument.createElement('variant');
-
-                const code = xmlDocument.createElement('code');
-                code.textContent = item.code;
-                variant.appendChild(code);
-
-                const count = xmlDocument.createElement('count');
-                count.textContent = item.count;
-                variant.appendChild(count);
-
-                xmlDocument.documentElement.appendChild(variant);
-
-            });
-
-            return xmlDocument;
-        }
-
-    </script>
-</body>
+        </script>
+    </body>
 
 </html>

@@ -27,7 +27,7 @@ app.get('/variants', (req, res) => {
             text: value.text
         }))
 
-        res.json(variants);
+        res.send(variants);
     });
 });
 
@@ -38,23 +38,29 @@ app.post('/stat', (req, res) => {
         if (err) {
             return res.status(500).send("Ошибка чтения файла.");
         }
+
         const votes = JSON.parse(data);
+
         const statistics = Object.entries(votes.votes).map(([key, value]) => ({
             code: key,
             count: value.count
         }))
-        
+
+        // т.к. к этому сервису идёт AJAX-запрос со страниц с другим происхождением (origin), надо явно это разрешить
+        res.setHeader('Access-Control-Allow-Origin', '*');
+
+        // установка заголовка Content-Type для ответа
         if (clientAccept === 'application/json') {
-            res.json(statistics);
-        } else if (clientAccept === 'application/xml') {
-            res.type('xml');
+            res.setHeader('Content-Type', 'application/json');
             res.send(statistics);
+        } else if (clientAccept === 'application/xml') {
+            res.setHeader('Content-Type', 'application/xml');
+            res.send(statisticsToXML(statistics));
         } else {
-            res.type('html');
-            res.send(statistics);  
+            res.setHeader('Content-Type', 'text/html');
+            res.send(statistics);
+
         };
-
-
     });
 });
 
@@ -98,3 +104,17 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Сервер работает на порту ${PORT}`);
 });
+
+
+function statisticsToXML(statistics) {
+    let xml = '<statistics>';
+    statistics.forEach(stat => {
+        xml += '<stat>';
+        xml += `<code>${stat.code}</code>`;
+        xml += `<count>${stat.count}</count>`;
+        xml += '</stat>';
+    });
+    xml += '</statistics>';
+    return xml;
+}
+
