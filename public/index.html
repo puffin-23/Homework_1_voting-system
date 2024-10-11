@@ -1,34 +1,88 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Система голосования</title>
     <style>
-        body { font-family: Arial, sans-serif; }
-        .button { margin: 5px; padding: 10px; border: none; background-color: #4CAF50; color: white; }
-        .stats { margin-top: 20px; }
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .button {
+            margin: 5px;
+            padding: 10px;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .stats {
+            margin-top: 20px;
+        }
     </style>
 </head>
+
 <body>
     <h1>Голосование</h1>
     <div id="variants"></div>
     <div class="stats" id="statistics"></div>
 
+</head>
+<body>
+    <h1>Статистика голосования</h1>
+    <button onclick="fetchStatJSON()">Получить статистику в формате JSON</button>
+    <button onclick="fetchStatXML()">Получить статистику в формате XML</button>
+
     <script>
+        //Получение вариантов голосования
         async function fetchVariants() {
             const response = await fetch('/variants');
             const data = await response.json();
             return data;
         }
 
-        async function fetchStatistics() {
-            const response = await fetch('/stat', {
-                method: 'POST'
-            });
-            const stats = await response.json();
-            return stats;
+        //Получение статистики в формате JSON
+        async function fetchStatJSON() {
+            const fetchOptions = {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                }
+            }
+            const response = await fetch('/stat', fetchOptions)
+            const data = await response.json()
+            console.log('JSON-статистика:', JSON.stringify(data, null, 2));
         }
+        
+        //Получение статистики голосования в формате XML
+        async function fetchStatXML() {
+            const fetchOptions = {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/xml',
+                }
+            }
+            const response = await fetch('/stat', fetchOptions)
+            let data = await response.text();
+            console.log(data);
+            let statXml = stringToXmlDocument(data);
+            console.log('XML-статистика:', statXml);
+        }
+
+        //Получение статистики на странице в виде HTML
+        async function fetchStatistics() {
+        const fetchOptions = {
+            method: 'POST',
+            headers: {
+                'Accept': 'text/html',
+            }
+        }
+        const response = await fetch('/stat', fetchOptions)
+        const data = await response.json();
+        return data;
+    }
 
         async function castVote(code) {
             await fetch('/vote', {
@@ -56,19 +110,45 @@
                 variantsDiv.appendChild(button);
             }
 
-            updateStats(stats);
-        }
+            updateStats(stats);            
+            }
 
         async function updateStats() {
             const stats = await fetchStatistics();
             const statsDiv = document.getElementById('statistics');
-            statsDiv.innerHTML = '<h2>Статистика голосования:</h2>';
+            statsDiv.innerHTML = '<h3>Статистика</h3>'
             stats.forEach(item => {
-                statsDiv.innerHTML += `<p>Вариант ${item.code}: ${item.count} голосов</p>`;
+                statsDiv.innerHTML += `<p>Вариант ${item.code}: ${item.count} голосов</p>`
             });
         }
 
         render();
+
+
+        function stringToXmlDocument(jsonString) {
+            let jsonArray = JSON.parse(jsonString);
+
+            const xmlDocument = document.implementation.createDocument(null, 'votes');
+
+            jsonArray.forEach(item => {
+                const variant = xmlDocument.createElement('variant');
+
+                const code = xmlDocument.createElement('code');
+                code.textContent = item.code;
+                variant.appendChild(code);
+
+                const count = xmlDocument.createElement('count');
+                count.textContent = item.count;
+                variant.appendChild(count);
+
+                xmlDocument.documentElement.appendChild(variant);
+
+            });
+
+            return xmlDocument;
+        }
+
     </script>
 </body>
+
 </html>

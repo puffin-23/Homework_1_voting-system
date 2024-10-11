@@ -33,6 +33,7 @@ app.get('/variants', (req, res) => {
 
 // POST-сервис для получения статистики
 app.post('/stat', (req, res) => {
+    const clientAccept = req.headers.accept;
     fs.readFile(VOTES_FILE, 'utf8', (err, data) => {
         if (err) {
             return res.status(500).send("Ошибка чтения файла.");
@@ -41,20 +42,19 @@ app.post('/stat', (req, res) => {
         const statistics = Object.entries(votes.votes).map(([key, value]) => ({
             code: key,
             count: value.count
-        }));
-        const clientAccept = req.headers.accept
-        if ( clientAccept === 'application/json') {
-            res.setHeader('Content-Type', 'application/json');
+        }))
+        
+        if (clientAccept === 'application/json') {
             res.json(statistics);
-        } 
-        else if ( clientAccept === 'application/xml') {
-            res.setHeader('Content-Type', 'application/xml');
+        } else if (clientAccept === 'application/xml') {
+            res.type('xml');
             res.send(statistics);
-        }
-        else {
-            res.setHeader('Content-Type', 'text/plain');
-            res.send(statistics);
-        }
+        } else {
+            res.type('html');
+            res.send(statistics);  
+        };
+
+
     });
 });
 
