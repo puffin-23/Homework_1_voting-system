@@ -57,6 +57,18 @@
                 const response = await fetch('/stat', fetchOptions)
                 const data = await response.json()
                 console.log('JSON-статистика:', JSON.stringify(data, null, 2));
+
+                async function call_ajax() {
+                    const response=await fetch('/stat', fetchOptions);
+                    const data=await response.blob();
+
+                    var fakebtn = document.createElement('a');
+                    fakebtn.href = window.URL.createObjectURL(new Blob([data]));
+                    fakebtn.download = 'stat.json';
+                    fakebtn.click();
+                }
+
+                call_ajax();
             }
 
             //Получение статистики голосования в формате XML
@@ -71,6 +83,18 @@
                 let data = await response.text();
                 let statXml = xmlStringToDocument(data);
                 console.log('XML-статистика:', statXml);
+
+                async function call_ajax() {
+                    const response=await fetch('/stat', fetchOptions);
+                    const data=await response.blob();
+
+                    var fakebtn = document.createElement('a');
+                    fakebtn.href = window.URL.createObjectURL(new Blob([data]));
+                    fakebtn.download = 'stat.xml';
+                    fakebtn.click();
+                }
+
+                call_ajax();
             }
 
             //Получение статистики на странице
@@ -102,6 +126,18 @@
                 const response = await fetch('/stat', fetchOptions)
                 const data = await response.text();
                 console.log('HTML-статистика:', data);
+
+                async function call_ajax() {
+                    const response=await fetch('/stat', fetchOptions);
+                    const data=await response.blob();
+
+                    var fakebtn = document.createElement('a');
+                    fakebtn.href = window.URL.createObjectURL(new Blob([data]));
+                    fakebtn.download = 'stat.html';
+                    fakebtn.click();
+                }
+
+                call_ajax();
             }
             //Функция для рендеринга вариантов
             async function render() {
@@ -160,7 +196,7 @@
                 return html;
             }
 
-
+        
         </script>
     </body>
 

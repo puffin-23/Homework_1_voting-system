@@ -7,6 +7,9 @@ const path = require('path');
 const app = express();
 const PORT = 8581;
 const VOTES_FILE = path.join(__dirname, 'votes.json');
+const STATISTICS_HTML_FILE = path.join(__dirname, 'stat.html');
+const STATISTICS_XML_FILE = path.join(__dirname, 'stat.xml');
+const STATISTICS_JSON_FILE = path.join(__dirname, 'stat.json');
 
 // Middleware для парсинга JSON
 app.use(bodyParser.json());
@@ -50,12 +53,27 @@ app.post('/stat', (req, res) => {
         // установка заголовка Content-Type для ответа
         if (clientAccept === 'application/json') {
             res.setHeader('Content-Type', 'application/json');
+            fs.writeFile(STATISTICS_JSON_FILE, JSON.stringify(statistics, null, 2), (err) => {
+                if (err) {
+                    return res.status(500).send("Ошибка записи в файл.");
+                }
+            });
             res.send(statistics);
         } else if (clientAccept === 'application/xml') {
             res.setHeader('Content-Type', 'application/xml');
+            fs.writeFile(STATISTICS_XML_FILE, statisticsXML, (err) => {
+                if (err) {
+                    return res.status(500).send("Ошибка записи в файл.");
+                }
+            })
             res.send(statisticsXML);
         } else if (clientAccept === 'text/html') {
             res.setHeader('Content-Type', 'text/html');
+            fs.writeFile(STATISTICS_HTML_FILE, statisticsHTML, (err) => {
+                if (err) {
+                    return res.status(500).send("Ошибка записи в файл.");
+                }
+            })
             res.send(statisticsHTML);
         } else {
             res.send(statistics)
