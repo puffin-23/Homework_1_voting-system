@@ -29,21 +29,20 @@
     <div id="variants"></div>
     <div class="stats" id="statistics"></div>
 
-    </head>
-
     <body>
         <h1>Статистика голосования</h1>
-        <button onclick="fetchStatJSON()">Получить статистику в формате JSON</button>
-        <button onclick="fetchStatXML()">Получить статистику в формате XML</button>
+        <button onclick="fetchStatJSON()">Получить статистику в формате JSON</button><br>
+        <button onclick="fetchStatXML()">Получить статистику в формате XML</button><br>
+        <button onclick="fetchStatHTML()">Получить статистику в формате HTML</button>
 
         <script>
             //Получение вариантов голосования
             async function fetchVariants() {
                 const response = await fetch('/variants', {
-                    method: 'GET',
-                    headers: { 'Accept': 'application/json' }
+                    method: 'GET'
                 });
                 const data = await response.json();
+                console.log('Варианты голосования:', data);
                 return data;
             }
 
@@ -74,13 +73,10 @@
                 console.log('XML-статистика:', statXml);
             }
 
-            //Получение статистики на странице в виде HTML
+            //Получение статистики на странице
             async function fetchStatistics() {
                 const fetchOptions = {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'text/html',
-                    }
+                    method: 'POST'
                 }
                 const response = await fetch('/stat', fetchOptions)
                 const data = await response.text();
@@ -95,7 +91,19 @@
                     body: JSON.stringify({ code })
                 });
             }
-
+            //Получение статистики в HTML
+            async function fetchStatHTML() {
+                const fetchOptions = {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'text/html',
+                    }
+                }
+                const response = await fetch('/stat', fetchOptions)
+                const data = await response.text();
+                console.log('HTML-статистика:', data);
+            }
+            //Функция для рендеринга вариантов
             async function render() {
                 const variants = await fetchVariants();
                 const stats = await fetchStatistics();
@@ -117,6 +125,7 @@
                 updateStats();
             }
 
+            //Функция для обновления статистики
             async function updateStats() {
                 const stats = await fetchStatistics();
                 const statisticsDiv = document.getElementById('statistics');
@@ -125,7 +134,7 @@
             }
 
             render();
-
+            //Функция для преобразования XML-строки в DOM
             function xmlStringToDocument(xmlString) {
                 // Создаем новый экземпляр DOMParser
                 const parser = new DOMParser();
@@ -142,7 +151,7 @@
                 return xmlDoc;
             }
 
-
+            //Функция для преобразования статистики в HTML
             function statisticsToHTML(statistics) {
                 let html = '<h3>Статистика</h3>';
                 statistics.forEach(stat => {
