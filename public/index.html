@@ -54,22 +54,34 @@
                         'Accept': 'application/json',
                     }
                 }
-                const response = await fetch('/stat', fetchOptions)
-                const data = await response.json()
-                console.log('JSON-статистика:', JSON.stringify(data, null, 2));
+                try {
+                    // Отправляем первый запрос для получения данных в формате JSON
+                    const response = await fetch('/stat', fetchOptions);
+                    if (!response.ok) {
+                        throw new Error('Ошибка при получении данных: ' + response.statusText);
+                    }
 
-                async function call_ajax() {
-                    const response=await fetch('/stat', fetchOptions);
-                    const data=await response.blob();
+                    const jsonResponse = response.clone();
+                    const blobResponse = response.clone();
 
-                    var fakebtn = document.createElement('a');
+                    const data = await blobResponse.blob(); // Получаем Blob-данные
+
+                    // Логируем данные в формате JSON
+                    const jsonData = await jsonResponse.json(); // Вызываем json() снова
+                    console.log('JSON-статистика:', JSON.stringify(jsonData, null, 2));
+
+                    // Создаем элемент ссылки для скачивания
+                    const fakebtn = document.createElement('a');
                     fakebtn.href = window.URL.createObjectURL(new Blob([data]));
                     fakebtn.download = 'stat.json';
                     fakebtn.click();
-                }
+                    window.URL.revokeObjectURL(fakebtn.href);
 
-                call_ajax();
+                } catch (error) {
+                    console.error('Произошла ошибка:', error);
+                }
             }
+
 
             //Получение статистики голосования в формате XML
             async function fetchStatXML() {
@@ -79,22 +91,31 @@
                         'Accept': 'application/xml',
                     }
                 }
-                const response = await fetch('/stat', fetchOptions)
-                let data = await response.text();
-                let statXml = xmlStringToDocument(data);
-                console.log('XML-статистика:', statXml);
+                try {
+                    const response = await fetch('/stat', fetchOptions);
+                    if (!response.ok) {
+                        throw new Error('Ошибка при получении данных: ' + response.statusText);
+                    }
 
-                async function call_ajax() {
-                    const response=await fetch('/stat', fetchOptions);
-                    const data=await response.blob();
+                    const xmlResponse = response.clone();
+                    const blobResponse = response.clone();
 
-                    var fakebtn = document.createElement('a');
+                    const data = await blobResponse.blob(); 
+
+                    let xmlData = await xmlResponse.text(); 
+                    let statXml = xmlStringToDocument(xmlData);
+                    console.log('XML-статистика:', statXml);
+
+                   
+                    const fakebtn = document.createElement('a');
                     fakebtn.href = window.URL.createObjectURL(new Blob([data]));
                     fakebtn.download = 'stat.xml';
                     fakebtn.click();
-                }
+                    window.URL.revokeObjectURL(fakebtn.href);
 
-                call_ajax();
+                } catch (error) {
+                    console.error('Произошла ошибка:', error);
+                }
             }
 
             //Получение статистики на странице
@@ -123,21 +144,30 @@
                         'Accept': 'text/html',
                     }
                 }
-                const response = await fetch('/stat', fetchOptions)
-                const data = await response.text();
-                console.log('HTML-статистика:', data);
+                try {
+                    const response = await fetch('/stat', fetchOptions);
+                    if (!response.ok) {
+                        throw new Error('Ошибка при получении данных: ' + response.statusText);
+                    }
 
-                async function call_ajax() {
-                    const response=await fetch('/stat', fetchOptions);
-                    const data=await response.blob();
+                    const htmlResponse = response.clone();
+                    const blobResponse = response.clone();
 
-                    var fakebtn = document.createElement('a');
+                    const data = await blobResponse.blob(); 
+
+                    const htmlData = await htmlResponse.text(); 
+                    console.log('HTML-статистика:', htmlData);
+
+                   
+                    const fakebtn = document.createElement('a');
                     fakebtn.href = window.URL.createObjectURL(new Blob([data]));
                     fakebtn.download = 'stat.html';
                     fakebtn.click();
-                }
+                    window.URL.revokeObjectURL(fakebtn.href);
 
-                call_ajax();
+                } catch (error) {
+                    console.error('Произошла ошибка:', error);
+                }
             }
             //Функция для рендеринга вариантов
             async function render() {
@@ -195,8 +225,7 @@
                 });
                 return html;
             }
-
-        
+            
         </script>
     </body>
 
